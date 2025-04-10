@@ -1,0 +1,73 @@
+
+
+/* Общий стиль для контейнера */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f4f6f8; /* Светло-серый фон */
+    font-family: 'Arial', sans-serif;
+  }
+  
+  /* Стиль для формы */
+  .auth-form {
+    background: #ffffff; /* Белый фон формы */
+    padding: 30px 40px;
+    border-radius: 12px; /* Закругленные углы */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Мягкая тень */
+    width: 100%;
+    max-width: 400px; /* Максимальная ширина */
+    text-align: center;
+  }
+  
+  /* Заголовок формы */
+  .auth-form h2 {
+    margin-bottom: 20px;
+    color: #dd0000; /* Темно-серый текст */
+    font-size: 24px;
+  }
+  
+  /* Поля ввода */
+  .auth-form input {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border: 1px solid #cccccc; /* Серая граница */
+    border-radius: 8px; /* Закругленные углы */
+    font-size: 16px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Анимация */
+  }
+  
+  /* Фокус на полях ввода */
+  .auth-form input:focus {
+    border-color: #007bff; /* Синяя граница при фокусе */
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.2); /* Легкая подсветка */
+    outline: none; /* Убираем стандартное выделение */
+  }
+  
+  /* Кнопка входа */
+  .auth-form button {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff; /* Синий цвет кнопки */
+    color: #ffffff; /* Белый текст */
+    border: none;
+    border-radius: 8px; /* Закругленные углы */
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease; /* Анимация */
+  }
+  
+  /* Наведение на кнопку */
+  .auth-form button:hover {
+    background-color: #0056b3; /* Темно-синий цвет при наведении */
+  }
+  
+  /* Ошибки */
+  .auth-form .error {
+    color: #ff4d4d; /* Красный текст */
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: left;
+  }

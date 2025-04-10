@@ -1,49 +1,35 @@
-import logo from './logo.svg';
-import './App.css';
-import React, { useState, useEffect } from 'react';
-import ReactDOM from "react-dom";
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import PrivateRoute from './PrivateRoute';
+import LoginForm from './components/LoginForm';
+import AdminPanel from './components/AdminPanel';
+import Dashboard from './components/Dashboard';
 
-
-function DataFetchingComponent() {
-  const [data, setData] = useState([]); // Состояние для хранения данных
-  const [loading, setLoading] = useState(true); // Состояние загрузки
-  const [error, setError] = useState(null); // Состояние ошибки
-
-  useEffect(() => {
-    // Функция для получения данных
-    const fetchData = async () => {
-      try {
-        const response = await fetch('https://www.centrmag.ru/testReact.php'); // Замените на ваш URL
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
-        setData(result); // Сохраняем полученные данные в состоянии
-      } catch (err) {
-        setError(err.message); // Сохраняем ошибку в состоянии
-      } finally {
-        setLoading(false); // Устанавливаем загрузку в false
-      }
-    };
-
-    fetchData(); // Вызываем функцию получения данных
-  }, []); // Пустой массив зависимостей означает выполнение только при первом рендере
-
-  if (loading) return <p>Загрузка...</p>; // Отображаем сообщение загрузки
-  if (error) return <p>Произошла ошибка: {error}</p>; // Отображаем сообщение об ошибке
-
+function App() {
   return (
-    <div>
-      <h1>Полученные данные:</h1>
-      <ul>
-        {data.map(item => (
-          <li key={item.id}>
-            <strong>{item.name}:</strong> {item.description}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Публичный маршрут для страницы входа */}
+          <Route path="/login" element={<LoginForm />} />
+
+          {/* Защищенный маршрут для админ-панели */}
+          <Route
+            path="/admin"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+
+          {/* Перенаправление на страницу входа по умолчанию */}
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
-export default DataFetchingComponent;
+export default App;
