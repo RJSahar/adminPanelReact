@@ -4,15 +4,17 @@ import LogoutButton from './LogoutButton'; // Импортируем кнопк�
 
 const Dashboard = () => {
   const { authToken } = useContext(AuthContext);
+  const corsUrl = `http://localhost:3000/`;
 
-  // Состояние для хранения данных о товарах
-  const [products, setProducts] = useState([]);
-  const [productDetails, setProductDetails] = useState([]); // Массив данных о товаре
+  // Единое состояние для хранения данных
+  const [data, setData] = useState({
+    items: [],
+    type: null,
+  });
+
+  const [productId, setProductId] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // Состояние для поля ввода ID товара
-  const [productId, setProductId] = useState(''); // <-- Добавляем состояние
 
   // Парсим токен для получения данных пользователя (например, username)
   const parseJwt = (token) => {
@@ -30,19 +32,19 @@ const Dashboard = () => {
   const fetchPriceNoValid = async () => {
     setLoading(true);
     setError('');
-    setProducts([]);
 
     try {
       const response = await fetch('http://mpanalyticsback.mk-developers.ru/wb/priceNoValid', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authToken}`,
+          'Origin': corsUrl
         },
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setProducts(data); // Сохраняем данные о товарах
+        const fetchedData = await response.json();
+        setData({ items: fetchedData, type: 'priceNoValid' });
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Ошибка при получении данных');
@@ -58,20 +60,20 @@ const Dashboard = () => {
   const fetchProductDetails = async () => {
     setLoading(true);
     setError('');
-    setProductDetails([]);
 
     try {
       const response = await fetch(`http://mpanalyticsback.mk-developers.ru/wb/nomenklature/${productId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authToken}`,
+          'Origin': corsUrl
         },
       });
 
       if (response.ok) {
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          setProductDetails(data); // Сохраняем массив данных
+        const fetchedData = await response.json();
+        if (Array.isArray(fetchedData)) {
+          setData({ items: fetchedData, type: 'productDetails' });
         } else {
           setError('Некорректные данные от сервера');
         }
@@ -85,6 +87,129 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+
+  // Функция для получения товаров, у которых остатки на WB больше, чем на сайте
+  const fetchStockWBStockSite = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('http://mpanalyticsback.mk-developers.ru/wb/stockWB_stockSite', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Origin': corsUrl
+        },
+      });
+
+      if (response.ok) {
+        const fetchedData = await response.json();
+        setData({ items: fetchedData, type: 'stockWB_stockSite' });
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Ошибка при получении данных');
+      }
+    } catch (err) {
+      setError('Сетевая ошибка');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Функция для получения товаров, у которых остатки на сайте больше, чем на WB
+  const fetchStockSiteStockWB = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('http://mpanalyticsback.mk-developers.ru/wb/stockSite_stockWB', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Origin': corsUrl
+        },
+      });
+
+      if (response.ok) {
+        const fetchedData = await response.json();
+        setData({ items: fetchedData, type: 'stockSite_stockWB' });
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Ошибка при получении данных');
+      }
+    } catch (err) {
+      setError('Сетевая ошибка');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Функция для получения товаров, которые не выложены на WB
+const fetchReklamaNoWB = async () => {
+  setLoading(true);
+  setError('');
+  try {
+    // Логирование токена
+    if (!authToken) {
+      throw new Error('Токен авторизации отсутствует');
+    }
+
+    const response = await fetch('http://mpanalyticsback.mk-developers.ru/wb/reklama_noWB', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Origin': corsUrl
+      },
+    });
+
+    console.log('Заголовки ответа:', response.headers);
+    console.log('Ответ сервера:', response);
+    if (response.ok) {
+      const fetchedData = await response.json();
+      console.log('Полученные данные:', fetchedData);
+      setData({ items: fetchedData, type: 'reklama_noWB' }); // Сохраняем данные с типом
+    } else {
+      const errorData = await response.json();
+      console.error('Ошибка сервера:', errorData);
+      setError(errorData.error || 'Ошибка при получении данных');
+    }
+  } catch (err) {
+    console.error('Сетевая ошибка:', err);
+    setError('Сетевая ошибка');
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Функция для получения товаров, которые не выложены на каом-то маркетплейсе
+const fetchTovarsOnMarketplace = async () => {
+setLoading(true);
+setError('');
+try {
+  // Логирование токена
+  if (!authToken) {
+    throw new Error('Токен авторизации отсутствует');
+  }
+
+  const response = await fetch('http://mpanalyticsback.mk-developers.ru/wb/tovarsOnMarketplace', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${authToken}`,
+      'Origin': corsUrl
+    },
+  });
+
+  if (response.ok) {
+    const fetchedData = await response.json();
+    setData({ items: fetchedData, type: 'tovarsOnMarketplace' }); // Сохраняем данные с типом
+  } else {
+    const errorData = await response.json();
+    setError(errorData.error || 'Ошибка при получении данных');
+  }
+} catch (err) {
+  setError('Сетевая ошибка');
+} finally {
+  setLoading(false);
+}
+};
 
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
@@ -111,6 +236,74 @@ const Dashboard = () => {
           }}
         >
           Проверить цены
+        </button>
+
+        {/* Кнопка проверки остатков больше на WB */}
+        <button
+          onClick={fetchStockWBStockSite}
+          style={{
+            marginTop: '10px',
+            padding: '10px 20px',
+            backgroundColor: '#007bff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            width: '100%',
+          }}
+        >
+          Проверить остатки больше на WB
+        </button>
+
+        {/* Кнопка проверки остатков больше на сайте */}
+        <button
+          onClick={fetchStockSiteStockWB}
+          style={{
+            marginTop: '10px',
+            padding: '10px 20px',
+            backgroundColor: '#007bff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            width: '100%',
+          }}
+        >
+          Проверить остатки больше на сайте
+        </button>
+
+        {/* Кнопка проверки товаров, не выложенных на WB */}
+        <button
+          onClick={fetchReklamaNoWB}
+          style={{
+            marginTop: '10px',
+            padding: '10px 20px',
+            backgroundColor: '#007bff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            width: '100%',
+          }}
+        >
+          Проверить товары, не выложенные на WB
+        </button>
+
+        {/* Кнопка проверки товаров, не выложенных на каком-то маркетплейсе */}
+        <button
+          onClick={fetchTovarsOnMarketplace}
+          style={{
+            marginTop: '10px',
+            padding: '10px 20px',
+            backgroundColor: '#007bff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            width: '100%',
+          }}
+        >
+          Проверить товары, не выложенные на каком-то маркетплейсе
         </button>
         
         {/* Поле для ввода ID товара */}
@@ -157,7 +350,7 @@ const Dashboard = () => {
         {/* Отображение данных о товарах */}
         {loading && <p>Загрузка...</p>}
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        {products.length > 0 && (
+        {data.items.length > 0 && data.type === 'priceNoValid' && (
           <div>
             <h2>Товары с некорректными ценами:</h2>
             <table style={styles.table}>
@@ -177,7 +370,7 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {products.map((product) => (
+              {data.items.map((product) => (
                   <tr key={product.id}>
                     <td style={styles.tableTd}>{product.Id}</td>
                     <td style={styles.tableTd}>{product.Cabinet}</td>
@@ -198,7 +391,7 @@ const Dashboard = () => {
         )}
 
         {/* Отображение данных о конкретном товаре */}
-        {productDetails.length > 0 && (
+        {data.items.length > 0 && data.type === 'productDetails' && (
           <div>
             <h2>Информация о товаре:</h2>
             <table style={styles.table}>
@@ -214,7 +407,7 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {productDetails.map((item) => (
+              {data.items.map((item) => (
                   <tr key={item.Id}>
                     <td style={styles.tableTd}>{item.Cabinet}</td>
                     <td style={styles.tableTd}>{item.priceWB}</td>
@@ -229,9 +422,144 @@ const Dashboard = () => {
             </table>
           </div>
         )}
-        {productDetails.length === 0 && productId && !loading && !error && (
+        {data.items.length === 0 && productId && !loading && !error && (
           <p>Товар с ID "{productId}" не найден.</p>
         )}
+
+        {data.items.length > 0 && data.type === 'stockWB_stockSite' && (
+          <div>
+            <h2>Товары с остатками на WB больше, чем на сайте:</h2>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.tableTh}>Кабинет</th>
+                  <th style={styles.tableTh}>Артикул</th>
+                  <th style={styles.tableTh}>Остаток на WB</th>
+                  <th style={styles.tableTh}>Остаток на сайте</th>
+                  <th style={styles.tableTh}>Цена WB</th>
+                  <th style={styles.tableTh}>Цена на сайте</th>
+                </tr>
+              </thead>
+              <tbody>
+              {data.items.map((item) => (
+                  <tr key={item.Id}>
+                    <td style={styles.tableTd}>{item.Cabinet}</td>
+                    <td style={styles.tableTd}>{item.vendorCode}</td>
+                    <td style={styles.tableTd}>{item.stockWB}</td>
+                    <td style={styles.tableTd}>{item.stockSite}</td>
+                    <td style={styles.tableTd}>{item.priceWB}</td>
+                    <td style={styles.tableTd}>{item.priceSite}</td>
+                  </tr>
+                ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {data.items.length > 0 && data.type === 'stockSite_stockWB' && (
+            <div>
+              <h2>Товары с остатками на WB больше, чем на сайте:</h2>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.tableTh}>Кабинет</th>
+                    <th style={styles.tableTh}>Артикул</th>
+                    <th style={styles.tableTh}>Остаток на WB</th>
+                    <th style={styles.tableTh}>Остаток на сайте</th>
+                    <th style={styles.tableTh}>Цена WB</th>
+                    <th style={styles.tableTh}>Цена на сайте</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {data.items.map((item) => (
+                    <tr key={item.Id}>
+                      <td style={styles.tableTd}>{item.Cabinet}</td>
+                      <td style={styles.tableTd}>{item.vendorCode}</td>
+                      <td style={styles.tableTd}>{item.stockWB}</td>
+                      <td style={styles.tableTd}>{item.stockSite}</td>
+                      <td style={styles.tableTd}>{item.priceWB}</td>
+                      <td style={styles.tableTd}>{item.priceSite}</td>
+                    </tr>
+                  ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+          {data.items.length > 0 && data.type === 'reklama_noWB' && (
+            <div>
+              <h2>Товары, не выложенные на WB:</h2>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.tableTh}>ID</th>
+                    <th style={styles.tableTh}>Наименование</th>
+                    <th style={styles.tableTh}>Остаток</th>
+                    <th style={styles.tableTh}>Наличие</th>
+                    <th style={styles.tableTh}>Производим</th>
+                    <th style={styles.tableTh}>Цена</th>
+                    <th style={styles.tableTh}>Тип</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.items.map((item) => (
+                    <tr key={item.id}>
+                      <td style={styles.tableTd}>{item.id}</td>
+                      <td style={styles.tableTd}>{item.ogl}</td>
+                      <td style={styles.tableTd}>{item.ost}</td>
+                      <td style={styles.tableTd}>{item.nal ? 'Да' : 'Нет'}</td>
+                      <td style={styles.tableTd}>{item.proizvodim ? 'Да' : 'Нет'}</td>
+                      <td style={styles.tableTd}>{item.cena}</td>
+                      <td style={styles.tableTd}>{item.nomType}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {data.items.length > 0 && data.type === 'tovarsOnMarketplace' && (
+            <div>
+              <h2>Товары, не выложенные на маркетплейсах:</h2>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.tableTh}>Артикул</th>
+                    <th style={styles.tableTh}>Название</th>
+                    <th style={styles.tableTh}>Ссылка на товар</th>
+                    <th style={styles.tableTh}>YandexMarket</th>
+                    <th style={styles.tableTh}>Ozon</th>
+                    <th style={styles.tableTh}>WB</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.items.map((item) => (
+                    <tr key={item.Id}>
+                      <td style={styles.tableTd}>{item.mainId}</td>
+                      <td style={styles.tableTd}>{item.ogl}</td>
+                      <td style={styles.tableTd}>
+                      <a
+                        href={`https://www.centrmag.ru/catalog/product/${item.id_dop}/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#007bff', textDecoration: 'underline' }}
+                      >
+                        Перейти к товару
+                      </a>
+                      </td>
+                      <td style={styles.tableTd}>{item.market ? 'Да' : 'Нет'}</td>
+                      <td style={styles.tableTd}>{item.ozon ? 'Да' : 'Нет'}</td>
+                      <td style={styles.tableTd}>{item.wb ? 'Да' : 'Нет'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {data.items.length === 0 && !loading && !error && (
+            <p>Данные не найдены.</p>
+          )}
       </main>
     </div>
   );
